@@ -13,6 +13,22 @@ export const UploadMp3 = () => {
   };
   const fileTypes = ["mp3", "m4a", "wav"];
 
+  const handleUpload = async () => {
+    if (!file) {
+      return;
+    }
+    const data = new FormData();
+    data.append("file", file);
+    const response = await fetch("http://localhost:3000/transcribe", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: data,
+    });
+    console.log(response.body);
+  };
+
   return (
     <div>
       <FileUploader
@@ -96,10 +112,7 @@ export const UploadMp3 = () => {
           },
         }}
         disabled={!file}
-        onClick={() => {
-          if (!file) return;
-          console.log(file);
-        }}
+        onClick={handleUpload}
       >
         Start Transcription
       </Button>
