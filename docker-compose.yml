@@ -5,6 +5,21 @@ services:
     ports:
       - 9000:9000
     environment:
-      - ASR_MODEL=base
+      - ASR_MODEL=medium
     volumes:
       - ./models:/root/.cache/whisper
+  server:
+    build:
+      context: packages/server
+      dockerfile: Dockerfile
+    environment:
+      - WORK_DIR=/home/rahien/source/scribe/tmp
+      - WHISPER_URL=http://whisper:9000
+    ports:
+      - "3000:3000"
+  client:
+    build:
+      context: packages/client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"

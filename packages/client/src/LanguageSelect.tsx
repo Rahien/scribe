@@ -1,10 +1,4 @@
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Tooltip,
-} from "@mui/material";
+import { FormControl, MenuItem, Select, Tooltip } from "@mui/material";
 import { tokens } from "./tokens";
 import { Info } from "@mui/icons-material";
 
