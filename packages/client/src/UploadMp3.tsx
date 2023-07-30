@@ -3,6 +3,9 @@ import { useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { tokens } from "./tokens";
 import { Button } from "@mui/material";
+import { LanguageSelect } from "./LanguageSelect";
+import { PartLengthSelect } from "./PartLengthSelect";
+import { useLocalStorage } from "usehooks-ts";
 const MAX_SIZE = 2000;
 
 export const UploadMp3 = ({
@@ -12,6 +15,12 @@ export const UploadMp3 = ({
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lang, setLang] = useLocalStorage(
+    "transcriptionLanguage",
+    navigator.language.split("-")[0] || "en"
+  );
+  const [partLength, setPartLength] = useState(120);
+
   const handleChange = (file: File) => {
     setFile(file);
   };
@@ -23,6 +32,8 @@ export const UploadMp3 = ({
     }
     const data = new FormData();
     data.append("file", file);
+    data.append("lang", lang);
+    data.append("partLength", partLength.toString());
     const response = await fetch("http://localhost:3000/transcribe", {
       method: "POST",
       headers: {
@@ -85,6 +96,8 @@ export const UploadMp3 = ({
                 display: "flex",
                 gap: tokens.spacing.xsmall,
                 flexShrink: 0,
+                backgroundColor: tokens.colors.blue,
+                color: tokens.colors.white,
               }}
             >
               <AudioFile />
@@ -95,14 +108,32 @@ export const UploadMp3 = ({
       </FileUploader>
       <div
         css={{
-          color: "red",
-          fontWeight: "bold",
           marginTop: tokens.spacing.small,
           marginBottom: tokens.spacing.small,
+          display: "flex",
+          justifyContent: "center",
+          [tokens.mediaQueries.aboveSmall]: {
+            flexDirection: "row",
+          },
+          flexDirection: "column",
+          gap: tokens.spacing.xlarge,
         }}
       >
-        {error}
+        <LanguageSelect lang={lang} setLang={setLang} />
+        <PartLengthSelect length={partLength} setLength={setPartLength} />
       </div>
+      {error && (
+        <div
+          css={{
+            color: "red",
+            fontWeight: "bold",
+            marginTop: tokens.spacing.small,
+            marginBottom: tokens.spacing.small,
+          }}
+        >
+          {error}
+        </div>
+      )}
       <Button
         variant="contained"
         color="primary"

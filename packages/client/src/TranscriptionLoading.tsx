@@ -6,6 +6,7 @@ import { tokens } from "./tokens";
 import { DataResponse, StatusResponse } from "./types";
 import { TranscriptionResult } from "./TranscriptionResult";
 import { ContentPaste } from "@mui/icons-material";
+import { SkeletonSegment } from "./SkeletonSegment";
 
 export const TranscriptionLoading = ({ id }: { id: string }) => {
   const { data: status, error: statusError } = useSWR<StatusResponse>(
@@ -30,10 +31,10 @@ export const TranscriptionLoading = ({ id }: { id: string }) => {
     }
     setCurrentData(data);
   }, [data]);
-  const error = statusError || dataError;
+  const error = statusError || dataError || currentData?.error;
 
   const loading =
-    !status || status.partsDone < status.totalParts || status.totalParts === 0;
+    !status || status.partsDone < status.totalParts || !status.totalParts;
 
   const [copied, setCopied] = useState(false);
 
@@ -52,43 +53,62 @@ export const TranscriptionLoading = ({ id }: { id: string }) => {
             Your transcription is now ready! You can safely copy the text below
             or use this button to copy the full text to your cliboard.
           </p>
-          <Button
-            variant="contained"
-            color="primary"
+          <div
             css={{
-              width: "250px",
               display: "flex",
-              justifyContent: "center",
+              alignItems: "center",
+              gap: tokens.spacing.medium,
               margin: "0 auto",
               marginBottom: tokens.spacing.large,
-            }}
-            onClick={() => {
-              if (!currentData) {
-                return;
-              }
-              navigator.clipboard.writeText(
-                currentData?.result
-                  .map((part) => {
-                    return part.json.text;
-                  })
-                  .join("\n")
-              );
-              setCopied(true);
-              setTimeout(() => {
-                setCopied(false);
-              }, 2000);
+              justifyContent: "center",
             }}
           >
-            <ContentPaste css={{ marginRight: tokens.spacing.xsmall }} />
-            {copied ? "Copied!" : "Copy to clipboard"}
-          </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              css={{
+                width: "250px",
+                display: "flex",
+                justifyContent: "center",
+              }}
+              onClick={() => {
+                if (!currentData) {
+                  return;
+                }
+                navigator.clipboard.writeText(
+                  currentData?.result
+                    .map((part) => {
+                      return part.json.text;
+                    })
+                    .join("\n")
+                );
+                setCopied(true);
+                setTimeout(() => {
+                  setCopied(false);
+                }, 2000);
+              }}
+            >
+              <ContentPaste css={{ marginRight: tokens.spacing.xsmall }} />
+              {copied ? "Copied!" : "Copy to clipboard"}
+            </Button>
+            <Button href="/" target="_blank" variant="outlined" color="primary">
+              Start new transcription
+            </Button>
+          </div>
         </div>
       )}
       {error && (
-        <div>
-          Something went wrong while fetching the transcription status:{" "}
-          {JSON.stringify(error)}
-        </div>
+        <Alert
+          severity="error"
+          css={{
+            marginBottom: tokens.spacing.small,
+            textAlign: "left",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          Something went wrong while fetching the transcription status:{"\n"}
+          {JSON.stringify(error, null, 2).split("\\n").join("\n")}
+        </Alert>
       )}
       {loading && (
         <div
@@ -107,7 +127,7 @@ export const TranscriptionLoading = ({ id }: { id: string }) => {
             css={{ flexGrow: 1, height: 10, borderRadius: 4 }}
           />
           <div>
-            {status?.partsDone} out of {status?.totalParts} parts
+            {status?.partsDone} out of {status?.totalParts || "?"} parts
           </div>
         </div>
       )}
@@ -118,6 +138,7 @@ export const TranscriptionLoading = ({ id }: { id: string }) => {
         </Alert>
       )}
       {currentData && <TranscriptionResult result={currentData} />}
+      {loading && <SkeletonSegment />}
     </div>
   );
 };

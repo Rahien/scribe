@@ -5,6 +5,6 @@ services:
     ports:
       - 9000:9000
     environment:
-      - ASR_MODEL=small
+      - ASR_MODEL=base
     volumes:
       - ./models:/root/.cache/whisper

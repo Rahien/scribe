@@ -13,15 +13,16 @@ type StatusRecord = {
   error?: any;
   partDurationSeconds?: number;
   partCount?: number;
+  partLength?: number;
 };
 const status = {} as Record<string, StatusRecord>;
 
-const transcribeFile = async (path: string) => {
+const transcribeFile = async (path: string, lang: string) => {
   const formData = new FormData();
   formData.append("audio_file", fs.createReadStream(path));
 
   const result = await fetch(
-    `${process.env.WHISPER_URL}/asr?task=transcribe&language=nl&encode=true&output=json`,
+    `${process.env.WHISPER_URL}/asr?task=transcribe&language=${lang}&encode=true&output=json`,
     {
       method: "post",
       body: formData,
@@ -34,7 +35,7 @@ const transcribeFile = async (path: string) => {
   return result;
 };
 
-const transcribeAllFiles = async (id: string) => {
+const transcribeAllFiles = async (id: string, lang: string) => {
   const WORK_DIR = process.env.WORK_DIR || "/tmp";
   const files = fs.readdirSync(`${WORK_DIR}/${id}`);
   files.sort((a, b) => {
@@ -49,9 +50,9 @@ const transcribeAllFiles = async (id: string) => {
     parseInt(process.env.PART_DURATION_SECONDS, 10) || 120;
 
   let index = 0;
-  while (files) {
+  while (files.length > 0) {
     const file = files.shift();
-    const json = await transcribeFile(`${WORK_DIR}/${id}/${file}`);
+    const json = await transcribeFile(`${WORK_DIR}/${id}/${file}`, lang);
 
     status[id].result = status[id].result || [];
 
@@ -60,21 +61,26 @@ const transcribeAllFiles = async (id: string) => {
   }
 };
 
-export const transcribe = async (file: {
-  path: string;
-  mimetype: string;
-  originalname: string;
-}) => {
+export const transcribe = async (
+  file: {
+    path: string;
+    mimetype: string;
+    originalname: string;
+  },
+  lang: string,
+  partLength: number
+) => {
   const id = v4();
   status[id] = {
     originalname: file.originalname,
     started: new Date().getTime(),
+    partLength: partLength,
   };
   Promise.resolve()
     .then(async () => {
-      await audioFileToMp3Chunks(id, file);
-      await transcribeAllFiles(id);
-      runShellCommand(`rm -rf ${process.env.WORK_DIR}/${id}`);
+      await audioFileToMp3Chunks(id, file, partLength);
+      await transcribeAllFiles(id, lang);
+      await runShellCommand(`rm -rf ${process.env.WORK_DIR}/${id}`);
       status[id].finished = new Date().getTime();
     })
     .catch((err) => {

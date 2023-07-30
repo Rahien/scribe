@@ -14,14 +14,16 @@ const formatTime = (seconds: number) => {
 export const TranscriptionSegment = ({
   segment,
   part,
+  partLength,
 }: {
   segment: Segment;
   part: Part;
+  partLength: number;
 }) => {
   return (
     <div css={{ display: "flex", gap: tokens.spacing.small }}>
-      <div css={{ width: 60, userSelect: "none" }}>
-        {formatTime(120 * part.index + segment.start)}
+      <div css={{ width: 60, userSelect: "none", flexShrink: 0 }}>
+        {formatTime(partLength * part.index + segment.start)}
       </div>
       <div css={{ textAlign: "left" }}>{segment.text}</div>
     </div>

@@ -13,7 +13,11 @@ export const TranscriptionResult = ({ result }: { result: DataResponse }) => {
         return (
           <>
             {index > 0 && <RedLine />}
-            <TranscriptionPart key={index} part={part} />
+            <TranscriptionPart
+              key={index}
+              part={part}
+              partLength={result.partLength}
+            />
           </>
         );
       })}

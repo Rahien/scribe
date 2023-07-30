@@ -18,6 +18,7 @@ export type DataResponse = {
   started: number;
   finished?: number;
   error: string | null;
+  partLength: number;
 };
 
 export type StatusResponse = {
