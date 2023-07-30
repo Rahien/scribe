@@ -2,8 +2,9 @@ import { useState } from "react";
 import "./App.css";
 import { UploadMp3 } from "./UploadMp3";
 import { tokens } from "./tokens";
-import { TranscriptionLoading } from "./TranscriptionLoading";
+import { Transcription } from "./Transcription";
 import { ThemeProvider, createTheme } from "@mui/material";
+import { AudioContextProvider, Audioplayer } from "./Audioplayer";
 
 const darkTheme = createTheme({
   palette: {
@@ -12,21 +13,30 @@ const darkTheme = createTheme({
 });
 function App() {
   const [uploadId, setUploadId] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   return (
     <ThemeProvider theme={darkTheme}>
-      <div
-        css={{
-          margin: "0 auto",
-          padding: tokens.spacing.large,
-        }}
-      >
-        <h1>Scribe</h1>
-        {uploadId ? (
-          <TranscriptionLoading id={uploadId} />
-        ) : (
-          <UploadMp3 onUploadStarted={(id) => setUploadId(id)} />
-        )}
-      </div>
+      <AudioContextProvider>
+        <div
+          css={{
+            margin: "0 auto",
+            padding: tokens.spacing.large,
+          }}
+        >
+          <h1>Scribe</h1>
+          {file && <Audioplayer file={file} />}
+          {uploadId ? (
+            <Transcription id={uploadId} />
+          ) : (
+            <UploadMp3
+              onUploadStarted={(id, file) => {
+                setUploadId(id);
+                setFile(file);
+              }}
+            />
+          )}
+        </div>
+      </AudioContextProvider>
     </ThemeProvider>
   );
 }

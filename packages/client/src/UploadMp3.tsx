@@ -11,7 +11,7 @@ const MAX_SIZE = 2000;
 export const UploadMp3 = ({
   onUploadStarted,
 }: {
-  onUploadStarted: (id: string) => void;
+  onUploadStarted: (id: string, file: File) => void;
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export const UploadMp3 = ({
       body: data,
     });
     const { id } = await response.json();
-    onUploadStarted(id);
+    onUploadStarted(id, file);
   };
 
   return (

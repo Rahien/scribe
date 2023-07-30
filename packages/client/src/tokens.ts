@@ -3,6 +3,7 @@ export const tokens = {
     blue: "#0069ff",
     red: "#ff0000",
     white: "#ffffff",
+    black: "#000000",
   },
   spacing: {
     xsmall: 4,

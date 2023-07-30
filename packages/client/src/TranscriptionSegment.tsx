@@ -1,5 +1,8 @@
+import { PlayCircle } from "@mui/icons-material";
 import { tokens } from "./tokens";
 import { Part, Segment } from "./types";
+import { useContext } from "react";
+import { AudioContext } from "./Audioplayer";
 
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -20,10 +23,41 @@ export const TranscriptionSegment = ({
   part: Part;
   partLength: number;
 }) => {
+  const { setSelectedTime } = useContext(AudioContext);
+  const time = partLength * part.index + segment.start;
   return (
-    <div css={{ display: "flex", gap: tokens.spacing.small }}>
-      <div css={{ width: 60, userSelect: "none", flexShrink: 0 }}>
-        {formatTime(partLength * part.index + segment.start)}
+    <div
+      css={{
+        display: "flex",
+        gap: tokens.spacing.small,
+        cursor: "pointer",
+        "&:hover": {
+          background: tokens.colors.black,
+        },
+      }}
+      onClick={() => {
+        setSelectedTime(time);
+      }}
+    >
+      <div
+        css={{
+          width: 70,
+          userSelect: "none",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: tokens.spacing.xsmall,
+        }}
+      >
+        <PlayCircle
+          fontSize="small"
+          css={{
+            ["@media print"]: {
+              display: "none",
+            },
+          }}
+        />
+        {formatTime(time)}
       </div>
       <div css={{ textAlign: "left" }}>{segment.text}</div>
     </div>

@@ -8,7 +8,7 @@ import { TranscriptionResult } from "./TranscriptionResult";
 import { ContentPaste } from "@mui/icons-material";
 import { SkeletonSegment } from "./SkeletonSegment";
 
-export const TranscriptionLoading = ({ id }: { id: string }) => {
+export const Transcription = ({ id }: { id: string }) => {
   const { data: status, error: statusError } = useSWR<StatusResponse>(
     `http://localhost:3000/status/${id}`,
     swrFetcher,
@@ -40,18 +40,29 @@ export const TranscriptionLoading = ({ id }: { id: string }) => {
 
   return (
     <div>
-      <h2>Transcription {loading ? "loading..." : "done!"}</h2>
       {loading ? (
-        <p>
-          Your transcription of {status?.originalName || "your file"} is being
-          processed. This can take a few minutes. As parts of the transcription
-          become available, they will be shown on this page.
+        <p
+          css={{
+            fontStyle: "italic",
+            ["@media print"]: {
+              display: "none",
+            },
+          }}
+        >
+          Transcription in progress. This can take a few minutes. As parts of
+          the transcription become available, they will be shown on this page.
         </p>
       ) : (
-        <div>
-          <p>
+        <div
+          css={{
+            ["@media print"]: {
+              display: "none",
+            },
+          }}
+        >
+          <p css={{ fontStyle: "italic" }}>
             Your transcription is now ready! You can safely copy the text below
-            or use this button to copy the full text to your cliboard.
+            or use this button to copy the full text to your clipboard.
           </p>
           <div
             css={{
