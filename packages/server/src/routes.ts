@@ -1,5 +1,9 @@
 import { Request, Response, Router } from "express";
-import { transcribe } from "./transcriber";
+import {
+  deleteTranscription,
+  transcribe,
+  transcriptionStatus,
+} from "./transcriber";
 
 import multer from "multer";
 
@@ -11,12 +15,50 @@ routes.post(
   "/transcribe",
   upload.single("file"),
   async (req: Request, res: Response) => {
-    console.log(req.body);
-    console.log(req.file);
-
+    console.log(`transcribing file ${req.file.originalname}`);
     const id = await transcribe(req.file);
     res.send({ id });
   }
 );
+
+routes.get("/status/:id", (req: Request, res: Response) => {
+  const id = req.params.id;
+  const status = transcriptionStatus(id);
+  if (status) {
+    res.send({
+      originalname: status.originalname,
+      started: status.started,
+      totalParts: status.partCount,
+      partsDone: status.result?.length || 0,
+      error: status.error,
+    });
+  } else {
+    res.status(404).send({ error: "not found" });
+  }
+});
+
+routes.get("/result/:id", (req: Request, res: Response) => {
+  const id = req.params.id;
+  const status = transcriptionStatus(id);
+  if (!status) {
+    res.status(404).send({ error: "not found" });
+    return;
+  }
+
+  res.send({
+    originalname: status.originalname,
+    result: status.result,
+    totalParts: status.partCount,
+    started: status.started,
+    finished: status.finished,
+    error: status.error,
+  });
+});
+
+routes.delete("/result/:id", (req: Request, res: Response) => {
+  const id = req.params.id;
+  deleteTranscription(id);
+  res.send({ ok: true });
+});
 
 export default routes;

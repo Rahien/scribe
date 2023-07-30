@@ -1,6 +1,7 @@
 export const tokens = {
   colors: {
     blue: "#0069ff",
+    red: "#ff0000",
     white: "#ffffff",
   },
   spacing: {

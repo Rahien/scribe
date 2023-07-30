@@ -2,7 +2,8 @@ import { runShellCommand } from "./util";
 
 const splitMp3 = async (target: string) => {
   const WORK_DIR = process.env.WORK_DIR || "/tmp";
-  const command = `ffmpeg -y -loglevel repeat+level+error -i ${WORK_DIR}/${target}/input.mp3 -f segment -segment_time 120 -c copy ${WORK_DIR}/${target}/out%03d.mp3`;
+  const PART_DURATION_SECONDS = process.env.PART_DURATION_SECONDS || 120;
+  const command = `ffmpeg -y -loglevel repeat+level+error -i ${WORK_DIR}/${target}/input.mp3 -f segment -segment_time ${PART_DURATION_SECONDS} -c copy ${WORK_DIR}/${target}/out%03d.mp3`;
   await runShellCommand(command);
   const removeCommand = `rm ${WORK_DIR}/${target}/input.mp3`;
   await runShellCommand(removeCommand);

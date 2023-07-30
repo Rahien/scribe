@@ -5,7 +5,11 @@ import { tokens } from "./tokens";
 import { Button } from "@mui/material";
 const MAX_SIZE = 2000;
 
-export const UploadMp3 = () => {
+export const UploadMp3 = ({
+  onUploadStarted,
+}: {
+  onUploadStarted: (id: string) => void;
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const handleChange = (file: File) => {
@@ -26,7 +30,8 @@ export const UploadMp3 = () => {
       },
       body: data,
     });
-    console.log(response.body);
+    const { id } = await response.json();
+    onUploadStarted(id);
   };
 
   return (

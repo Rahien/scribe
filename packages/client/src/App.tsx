@@ -1,8 +1,11 @@
+import { useState } from "react";
 import "./App.css";
 import { UploadMp3 } from "./UploadMp3";
 import { tokens } from "./tokens";
+import { TranscriptionLoading } from "./TranscriptionLoading";
 
 function App() {
+  const [uploadId, setUploadId] = useState<string | null>(null);
   return (
     <div
       css={{
@@ -11,7 +14,11 @@ function App() {
       }}
     >
       <h1>Scribe</h1>
-      <UploadMp3 />
+      {uploadId ? (
+        <TranscriptionLoading id={uploadId} />
+      ) : (
+        <UploadMp3 onUploadStarted={(id) => setUploadId(id)} />
+      )}
     </div>
   );
 }
