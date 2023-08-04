@@ -21,7 +21,10 @@ export const AudioContextProvider = ({
   );
 };
 
-export const Audioplayer = ({ file }: { file: File }) => {
+export const Audioplayer = ({
+  file,
+  url,
+}: { file: File; url?: never } | { url: string; file?: never }) => {
   const { selectedTime } = useContext(AudioContext);
   const ref = useRef<HTMLAudioElement>(null);
   useEffect(() => {
@@ -33,9 +36,8 @@ export const Audioplayer = ({ file }: { file: File }) => {
   }, [selectedTime]);
   return (
     <div>
-      <h2>Transcription of {file.name}</h2>
       <audio
-        src={URL.createObjectURL(file)}
+        src={file ? URL.createObjectURL(file) : url}
         controls
         ref={ref}
         css={{

@@ -13,14 +13,12 @@ export const TranscriptionPart = ({
       {!part.json.segments && <div>No transcription found for this part</div>}
       {part.json.segments?.map((segment, index) => {
         return (
-          <>
-            <TranscriptionSegment
-              key={index}
-              segment={segment}
-              part={part}
-              partLength={partLength}
-            />
-          </>
+          <TranscriptionSegment
+            key={index}
+            segment={segment}
+            part={part}
+            partLength={partLength}
+          />
         );
       })}
     </div>

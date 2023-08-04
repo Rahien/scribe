@@ -12,7 +12,7 @@ export type Part = {
 };
 
 export type DataResponse = {
-  originalName: string;
+  originalname: string;
   result: Part[];
   totalParts: number;
   started: number;
@@ -27,5 +27,5 @@ export type StatusResponse = {
   started: number;
   finished?: number;
   error: string | null;
-  originalName: string;
+  originalname: string;
 };
