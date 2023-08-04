@@ -10,7 +10,8 @@ export const TranscriptionPart = ({
 }) => {
   return (
     <div>
-      {part.json.segments.map((segment, index) => {
+      {!part.json.segments && <div>No transcription found for this part</div>}
+      {part.json.segments?.map((segment, index) => {
         return (
           <>
             <TranscriptionSegment

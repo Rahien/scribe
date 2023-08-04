@@ -6,6 +6,15 @@ import {
 } from "./transcriber";
 
 import multer from "multer";
+import {
+  createMetadata,
+  deleteFromLibrary,
+  listLibrary,
+  readAudioFromLibrary,
+  readFromLibrary,
+  writeToLibrary,
+} from "./library";
+import { v4 } from "uuid";
 
 const upload = multer({ dest: process.env.WORK_DIR || "/tmp" });
 
@@ -15,8 +24,12 @@ routes.post(
   "/transcribe",
   upload.single("file"),
   async (req: Request, res: Response) => {
+    const id = v4();
+    await createMetadata(id, req.file);
+
     console.log(`transcribing file ${req.file.originalname}`);
-    const id = await transcribe(
+    await transcribe(
+      id,
       req.file,
       req.body.lang,
       parseInt(req.body.partLength, 10)
@@ -65,6 +78,27 @@ routes.get("/result/:id", (req: Request, res: Response) => {
       message: status.error.message || status.error,
     },
   });
+
+  writeToLibrary(id, status);
+});
+
+routes.get("/library", async (req: Request, res: Response) => {
+  res.send(await listLibrary());
+});
+
+routes.get("/library/:id", async (req: Request, res: Response) => {
+  const id = req.params.id;
+  res.send(await readFromLibrary(id));
+});
+
+routes.get("/library/:id/audio.mp3", (req: Request, res: Response) => {
+  const id = req.params.id;
+  readAudioFromLibrary(id, res);
+});
+
+routes.delete("/library/:id", (req: Request, res: Response) => {
+  deleteFromLibrary(req.params.id);
+  res.send({ ok: true });
 });
 
 routes.delete("/result/:id", (req: Request, res: Response) => {

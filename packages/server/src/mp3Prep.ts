@@ -1,11 +1,11 @@
+import { moveAudioToLibrary } from "./library";
 import { runShellCommand } from "./util";
 
 const splitMp3 = async (target: string, partLength: number) => {
   const WORK_DIR = process.env.WORK_DIR || "/tmp";
   const command = `ffmpeg -y -loglevel repeat+level+error -i ${WORK_DIR}/${target}/input.mp3 -f segment -segment_time ${partLength} -c copy ${WORK_DIR}/${target}/out%03d.mp3`;
   await runShellCommand(command);
-  const removeCommand = `rm ${WORK_DIR}/${target}/input.mp3`;
-  await runShellCommand(removeCommand);
+  await moveAudioToLibrary(target, `${WORK_DIR}/${target}/input.mp3`);
 };
 
 const transformToMp3 = async (target: string, mimetype: string) => {

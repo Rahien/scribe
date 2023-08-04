@@ -1,11 +1,10 @@
-import { v4 } from "uuid";
-import fs, { stat } from "fs";
+import fs from "fs";
 import FormData from "form-data";
 import fetch from "node-fetch";
 import { audioFileToMp3Chunks } from "./mp3Prep";
 import { runShellCommand } from "./util";
 
-type StatusRecord = {
+export type StatusRecord = {
   originalname: string;
   started: number;
   finished?: number;
@@ -29,7 +28,11 @@ const transcribeFile = async (path: string, lang: string) => {
     }
   ).then(async (res: any) => {
     const text = await res.text();
-    return JSON.parse(text);
+    if (res.status === 200) {
+      return JSON.parse(text);
+    } else {
+      return { error: text };
+    }
   });
 
   return result;
@@ -62,6 +65,7 @@ const transcribeAllFiles = async (id: string, lang: string) => {
 };
 
 export const transcribe = async (
+  id: string,
   file: {
     path: string;
     mimetype: string;
@@ -70,7 +74,6 @@ export const transcribe = async (
   lang: string,
   partLength: number
 ) => {
-  const id = v4();
   status[id] = {
     originalname: file.originalname,
     started: new Date().getTime(),
