@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
 import { tokens } from "./tokens";
 import { swrFetcher } from "./utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 
 type LibraryResponse = {
   id: string;
@@ -17,14 +18,15 @@ type LibraryResponse = {
 
 const LibraryEntry = ({ item }: { item: LibraryResponse[0] }) => {
   const navigate = useNavigate();
-  const removeItem = () => {
-    fetch(`http://localhost:3000/library/${item.id}`, {
-      method: "DELETE",
-    }).then(() => {
-      window.location.reload();
-    });
-  };
+
   const [tryingRemove, setTryingRemove] = useState(false);
+  const formattedItemSize = useMemo(() => {
+    const kbSize = Math.round(item.size / 1024);
+    if (kbSize > 1024) {
+      return `${Math.round(kbSize / 1024)} MB`;
+    }
+    return `${Math.round(item.size / 1024)} KB`;
+  }, [item]);
   return (
     <>
       <div
@@ -42,7 +44,7 @@ const LibraryEntry = ({ item }: { item: LibraryResponse[0] }) => {
           {dayjs(item.createdAt).format("YYYY-MM-DD HH:mm")}
         </div>
         <div css={{ flexGrow: 1, width: "unset" }}>{item.originalname}</div>
-        <div>{item.size}</div>
+        <div>{formattedItemSize}</div>
         <div>{item.mimetype}</div>
         <div
           css={{
@@ -75,43 +77,13 @@ const LibraryEntry = ({ item }: { item: LibraryResponse[0] }) => {
         </div>
       </div>
       {tryingRemove && (
-        <Dialog open={true}>
-          <div
-            css={{
-              padding: `${tokens.spacing.medium}px ${tokens.spacing.large}px`,
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: tokens.spacing.medium,
-            }}
-          >
-            <h2 css={{ marginBottom: 0, marginTop: 0 }}>Are you sure?</h2>
-            <div css={{ "> p": { margin: 0 } }}>
-              <p>Are you sure you want to remove this item?</p>{" "}
-              <p>This action cannot be undone!</p>
-            </div>
-            <div css={{ display: "flex", gap: tokens.spacing.small }}>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => {
-                  setTryingRemove(false);
-                  removeItem();
-                }}
-              >
-                Yes
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => setTryingRemove(false)}
-              >
-                No
-              </Button>
-            </div>
-          </div>
-        </Dialog>
+        <ConfirmDeleteDialog
+          id={item.id}
+          onClose={() => setTryingRemove(false)}
+          afterDelete={() => {
+            window.location.reload();
+          }}
+        />
       )}
     </>
   );

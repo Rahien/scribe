@@ -2,10 +2,19 @@ version: "3"
 services:
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest
+    expose:
+      - "9000"
+    environment:
+      - ASR_MODEL=medium
+    restart: on-failure
+    volumes:
+      - ./models:/root/.cache/whisper
+  whisper-single:
+    image: onerahmet/openai-whisper-asr-webservice:latest
     ports:
       - 9000:9000
     environment:
-      - ASR_MODEL=tiny
+      - ASR_MODEL=medium
     volumes:
       - ./models:/root/.cache/whisper
   server:
@@ -25,3 +34,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:80"
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - whisper
+    restart: on-failure
+    ports:
+      - "4000:4000"

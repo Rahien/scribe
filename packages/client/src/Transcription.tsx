@@ -19,6 +19,7 @@ export const Transcription = () => {
     { refreshInterval: keepFetchingStatus ? 1000 : 0 }
   );
   const [currentData, setCurrentData] = useState<DataResponse | null>(null);
+  const [showTimings, setShowTimings] = useState(true);
   const { data, error: dataError } = useSWR<DataResponse>(() => {
     if (!status || status.partsDone === 0) {
       return null;
@@ -49,6 +50,10 @@ export const Transcription = () => {
     }
   }, [status]);
 
+  if (!id) {
+    return null;
+  }
+
   return (
     <AudioContextProvider>
       <div
@@ -63,28 +68,39 @@ export const Transcription = () => {
         <h1 css={{ marginBottom: 0 }}>Scribe</h1>
 
         <h2>Transcription of {status?.originalname}</h2>
-        {status?.partsDone !== undefined && (
+        {status?.totalParts !== undefined && status?.totalParts > 0 && (
           <>
             <Audioplayer
               url={`http://localhost:3000/library/${id}/audio.mp3`}
             />
           </>
         )}
-        <TranscriptionControls currentData={currentData} />
-        <div>
+        <TranscriptionControls
+          currentData={currentData}
+          showTimings={showTimings}
+          setShowTimings={setShowTimings}
+          id={id}
+        />
+        <div
+          css={{
+            ["@media print"]: {
+              display: "none",
+            },
+          }}
+        >
           {loading ? (
-            <p
+            <Alert
+              severity="warning"
               css={{
                 fontStyle: "italic",
-                ["@media print"]: {
-                  display: "none",
-                },
+                marginBottom: tokens.spacing.medium,
+                textAlign: "left",
               }}
             >
               Transcription in progress. This can take a few minutes. As parts
               of the transcription become available, they will be shown on this
-              page.
-            </p>
+              page. <strong>This is NOT the final transcription.</strong>
+            </Alert>
           ) : (
             <div
               css={{
@@ -93,11 +109,16 @@ export const Transcription = () => {
                 },
               }}
             >
-              <p css={{ fontStyle: "italic" }}>
-                Your transcription is now ready! You can safely copy the text
-                below or use this button to copy the full text to your
-                clipboard.
-              </p>
+              <Alert
+                severity="success"
+                css={{
+                  fontStyle: "italic",
+                  marginBottom: tokens.spacing.medium,
+                }}
+              >
+                Your transcription is now ready! The text below can now be
+                safely copied or printed.
+              </Alert>
             </div>
           )}
           {error && (
@@ -136,18 +157,11 @@ export const Transcription = () => {
               </div>
             </div>
           )}
-          {currentData && loading && (
-            <Alert
-              severity="warning"
-              css={{ marginBottom: tokens.spacing.small }}
-            >
-              This is a partial transcription. The transcription is still being
-              processed...
-            </Alert>
-          )}
-          {currentData && <TranscriptionResult result={currentData} />}
-          {loading && <SkeletonSegment />}
         </div>
+        {currentData && (
+          <TranscriptionResult result={currentData} showTimings={showTimings} />
+        )}
+        {loading && <SkeletonSegment showTimings={showTimings} />}
       </div>
     </AudioContextProvider>
   );

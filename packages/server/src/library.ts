@@ -7,8 +7,15 @@ import { type Express } from "express";
 const LIBRARY_DIR = process.env.LIBRARY_DIR || "/tmp/library";
 
 const ensureLibraryDir = async (id: string) => {
+  await ensureLibraryBase();
   if (!fs.existsSync(`${LIBRARY_DIR}/${id}`)) {
     await fs.mkdirSync(`${LIBRARY_DIR}/${id}`, { recursive: true });
+  }
+};
+
+const ensureLibraryBase = async () => {
+  if (!fs.existsSync(`${LIBRARY_DIR}`)) {
+    await fs.mkdirSync(`${LIBRARY_DIR}`, { recursive: true });
   }
 };
 
@@ -50,12 +57,17 @@ export const readFromLibrary = async (id: string) => {
 };
 
 export const listLibrary = async () => {
+  await ensureLibraryBase();
   const transcriptions = fs.readdirSync(LIBRARY_DIR);
-  return Promise.all(
+  const transcriptionsWithMetaData = await Promise.all(
     transcriptions.map(async (id) => {
       return { ...(await readMetadata(id)), id };
     })
   );
+  transcriptionsWithMetaData.sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+  return transcriptionsWithMetaData;
 };
 
 export const moveAudioToLibrary = async (id: string, file: string) => {

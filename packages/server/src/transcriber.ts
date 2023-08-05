@@ -3,6 +3,7 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 import { audioFileToMp3Chunks } from "./mp3Prep";
 import { runShellCommand } from "./util";
+import schedule from "node-schedule";
 
 export type StatusRecord = {
   originalname: string;
@@ -38,6 +39,14 @@ const transcribeFile = async (path: string, lang: string) => {
   return result;
 };
 
+const transcriptionQueue = [] as {
+  path: string;
+  id: string;
+  index: number;
+  lang: string;
+}[];
+const runningTranscriptions = {} as Record<string, boolean>;
+
 const transcribeAllFiles = async (id: string, lang: string) => {
   const WORK_DIR = process.env.WORK_DIR || "/tmp";
   const files = fs.readdirSync(`${WORK_DIR}/${id}`);
@@ -55,13 +64,48 @@ const transcribeAllFiles = async (id: string, lang: string) => {
   let index = 0;
   while (files.length > 0) {
     const file = files.shift();
-    const json = await transcribeFile(`${WORK_DIR}/${id}/${file}`, lang);
 
-    status[id].result = status[id].result || [];
-
-    status[id].result.push({ index, json });
+    transcriptionQueue.push({
+      path: `${WORK_DIR}/${id}/${file}`,
+      id,
+      index,
+      lang,
+    });
     index += 1;
   }
+};
+
+const cleanup = async (id: string, path: string) => {
+  await runShellCommand(`rm -rf ${path}`);
+  if (status[id]?.partCount === status[id]?.result?.length) {
+    await runShellCommand(`rm -rf ${process.env.WORK_DIR}/${id}`);
+    status[id].finished = new Date().getTime();
+  }
+  status[id].finished = new Date().getTime();
+};
+
+const pickFromTranscriptionQueue = async () => {
+  // dumb transcription queue, single threaded as the main work is done by
+  // whisper and this app is assumed to be used by a single user
+  const parallelism = parseInt(process.env.PARALLELISM || "2", 10);
+  if (Object.keys(runningTranscriptions).length >= parallelism) {
+    return;
+  }
+  const toTranscribe = transcriptionQueue.shift();
+  if (!toTranscribe) {
+    return;
+  }
+
+  const { path, lang, index, id } = toTranscribe;
+  runningTranscriptions[path] = true;
+  const json = await transcribeFile(path, lang);
+
+  status[id].result = status[id].result || [];
+
+  status[id].result.push({ index, json });
+  status[id].result.sort((a, b) => a.index - b.index);
+  await cleanup(id, path);
+  delete runningTranscriptions[path];
 };
 
 export const transcribe = async (
@@ -83,8 +127,6 @@ export const transcribe = async (
     .then(async () => {
       await audioFileToMp3Chunks(id, file, partLength);
       await transcribeAllFiles(id, lang);
-      await runShellCommand(`rm -rf ${process.env.WORK_DIR}/${id}`);
-      status[id].finished = new Date().getTime();
     })
     .catch((err) => {
       status[id].error = err;
@@ -100,3 +142,5 @@ export const transcriptionStatus = (id: string) => {
 export const deleteTranscription = (id: string) => {
   delete status[id];
 };
+
+schedule.scheduleJob("* * * * * *", pickFromTranscriptionQueue);
