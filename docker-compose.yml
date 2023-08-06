@@ -19,12 +19,14 @@ services:
       - PARALLELISM=2
     volumes:
       - ./library:/tmp/library
+    restart: on-failure
     ports:
       - "3000:3000"
   client:
     build:
       context: packages/client
       dockerfile: Dockerfile
+    restart: on-failure
     ports:
       - "5173:80"
   nginx:
