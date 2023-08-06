@@ -10,6 +10,10 @@ import { tokens } from "./tokens";
 import { DataResponse, StatusResponse } from "./types";
 import { swrFetcher } from "./utils";
 
+import duration from "dayjs/plugin/duration";
+import dayjs from "dayjs";
+dayjs.extend(duration);
+
 export const Transcription = () => {
   const { id } = useParams();
   const [keepFetchingStatus, setKeepFetchingStatus] = useState(true);
@@ -29,6 +33,23 @@ export const Transcription = () => {
     }
     return null;
   }, swrFetcher);
+
+  const [elapsedTime, setElapsedTime] = useState("0s");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let endTime = dayjs();
+      if (currentData?.finished) {
+        endTime = dayjs(currentData?.finished);
+      }
+      setElapsedTime(
+        dayjs.duration(dayjs(endTime).diff(status?.started)).format("HH:mm:ss")
+      );
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [status, currentData]);
 
   useEffect(() => {
     if (!data) {
@@ -116,8 +137,9 @@ export const Transcription = () => {
                   marginBottom: tokens.spacing.medium,
                 }}
               >
-                Your transcription is now ready! The text below can now be
-                safely copied or printed.
+                Your transcription is now ready! The transcription took{" "}
+                {elapsedTime} The text below can now be safely copied or
+                printed.
               </Alert>
             </div>
           )}
@@ -144,6 +166,7 @@ export const Transcription = () => {
                 marginBottom: tokens.spacing.small,
               }}
             >
+              <div css={{ fontSize: 12 }}>Transcribing for {elapsedTime}</div>
               <LinearProgress
                 variant="determinate"
                 value={
@@ -152,7 +175,7 @@ export const Transcription = () => {
                 }
                 css={{ flexGrow: 1, height: 10, borderRadius: 4 }}
               />
-              <div>
+              <div css={{ fontSize: 12 }}>
                 {status?.partsDone} out of {status?.totalParts || "?"} parts
               </div>
             </div>

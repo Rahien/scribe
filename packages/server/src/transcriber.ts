@@ -11,7 +11,6 @@ export type StatusRecord = {
   finished?: number;
   result?: { index: number; json: string }[];
   error?: any;
-  partDurationSeconds?: number;
   partCount?: number;
   partLength?: number;
 };
@@ -58,8 +57,6 @@ const transcribeAllFiles = async (id: string, lang: string) => {
   });
 
   status[id].partCount = files.length;
-  status[id].partDurationSeconds =
-    parseInt(process.env.PART_DURATION_SECONDS, 10) || 120;
 
   let index = 0;
   while (files.length > 0) {
@@ -81,7 +78,6 @@ const cleanup = async (id: string, path: string) => {
     await runShellCommand(`rm -rf ${process.env.WORK_DIR}/${id}`);
     status[id].finished = new Date().getTime();
   }
-  status[id].finished = new Date().getTime();
 };
 
 const pickFromTranscriptionQueue = async () => {

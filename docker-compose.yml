@@ -9,14 +9,6 @@ services:
     restart: on-failure
     volumes:
       - ./models:/root/.cache/whisper
-  whisper-single:
-    image: onerahmet/openai-whisper-asr-webservice:latest
-    ports:
-      - 9000:9000
-    environment:
-      - ASR_MODEL=medium
-    volumes:
-      - ./models:/root/.cache/whisper
   server:
     build:
       context: packages/server
@@ -24,6 +16,7 @@ services:
     environment:
       - WORK_DIR=/tmp/scribe/tmp
       - WHISPER_URL=http://whisper:9000
+      - PARALLELISM=2
     volumes:
       - ./library:/tmp/library
     ports:
